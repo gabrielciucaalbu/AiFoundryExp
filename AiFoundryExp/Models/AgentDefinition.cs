@@ -15,4 +15,10 @@ public class AgentDefinition
 
     [JsonPropertyName("top_p")]
     public float? TopP { get; set; }
+
+    [JsonPropertyName("endpoint")]
+    public string Endpoint { get; set; }
+    
+    [JsonPropertyName("deploymentName")]
+    public string DeploymentName { get; set; }
 }

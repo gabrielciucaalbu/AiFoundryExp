@@ -9,7 +9,7 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        string endpoint = Environment.GetEnvironmentVariable("PROJECT_ENDPOINT") ?? "https://your-aiservices-id.services.ai.azure.com/api/projects/your-project";
+        string endpoint = Environment.GetEnvironmentVariable("PROJECT_ENDPOINT") ?? "https://agentic-experim-resource.services.ai.azure.com/api/projects/agentic-experim";
         string deployment = Environment.GetEnvironmentVariable("MODEL_DEPLOYMENT_NAME") ?? "your-model-deployment";
 
         string configPath = args.Length > 0 ? args[0] : Path.Combine("Configuration", "agents.json");
