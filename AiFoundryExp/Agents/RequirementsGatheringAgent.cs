@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace AiFoundryExp.Agents;
 
 /// <summary>
@@ -6,6 +8,8 @@ namespace AiFoundryExp.Agents;
 public class RequirementsGatheringAgent : BaseAgent
 {
     public RequirementsGatheringAgent(AgentDefinition definition, IMessageBus bus) : base(definition, bus) { }
+
+    private readonly string[] _fields = ["key_features"]; 
 
     /// <summary>
     /// Explore user needs and constraints to define system requirements.
@@ -21,5 +25,29 @@ public class RequirementsGatheringAgent : BaseAgent
     public void MaintainTraceability()
     {
         // Implementation would link requirements back to the originating business objectives.
+    }
+
+    public override string? GenerateNextQuestion(Dictionary<string, string> context)
+    {
+        while (NextFieldIndex < _fields.Length && context.ContainsKey(_fields[NextFieldIndex]))
+        {
+            NextFieldIndex++;
+        }
+
+        if (NextFieldIndex >= _fields.Length)
+        {
+            return null;
+        }
+
+        string field = _fields[NextFieldIndex].Replace('_', ' ');
+        return $"Please provide details about {field}.";
+    }
+
+    public override void ProcessAnswer(string answer, Dictionary<string, string> context)
+    {
+        if (NextFieldIndex < _fields.Length)
+        {
+            context[_fields[NextFieldIndex]] = answer;
+        }
     }
 }

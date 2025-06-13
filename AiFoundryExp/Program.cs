@@ -1,5 +1,6 @@
 using Azure.AI.Agents.Persistent;
 using System.Text.Json;
+using System.Collections.Generic;
 using AiFoundryExp.Agents;
 
 namespace AiFoundryExp;
@@ -25,14 +26,19 @@ class Program
         OrchestrationEngine engine = await OrchestrationEngine.LoadAsync(configPath, statePath, messageLog);
 
         IReadOnlyList<BaseAgent> agents = AgentRegistry.LoadAgents(configPath, engine.Bus);
-        UserInteractionAgent uiAgent = agents.OfType<UserInteractionAgent>().First();
-        DocumentGenerationAgent docAgent = agents.OfType<DocumentGenerationAgent>().First();
+        Dictionary<string, BaseAgent> agentMap = agents.ToDictionary(a => a.Name);
+        UserInteractionAgent uiAgent = (UserInteractionAgent)agentMap["User Interaction Agent"];
+        DocumentGenerationAgent docAgent = (DocumentGenerationAgent)agentMap["Document Generation Agent"];
 
         string inputFile = Path.Combine("input", "input.text");
-        Queue<string> pendingResponses = new();
+        Dictionary<string, string> context = new();
         if (File.Exists(inputFile))
         {
-            pendingResponses.Enqueue(File.ReadAllText(inputFile).Trim());
+            string initial = File.ReadAllText(inputFile).Trim();
+            if (!string.IsNullOrEmpty(initial))
+            {
+                context["business_idea"] = initial;
+            }
         }
 
         using StreamWriter log = new(Path.Combine(outputDir, "conversation.log"), append: true);
@@ -50,39 +56,41 @@ class Program
             Console.WriteLine($"\n--- {engine.CurrentPhase} ---");
             log.WriteLine($"--- {engine.CurrentPhase} ---");
 
-            foreach (AgentDefinition agent in engine.GetActiveAgents())
+            foreach (AgentDefinition agentDef in engine.GetActiveAgents())
             {
-                string question = GetQuestion(engine.CurrentPhase, agent.Name);
-                if (string.IsNullOrEmpty(question))
+                if (agentDef.Name == "User Interaction Agent")
                 {
-                    Console.WriteLine($"Activating agent '{agent.Name}'");
                     continue;
                 }
 
-                string response;
-                if (pendingResponses.Count > 0)
-                {
-                    response = pendingResponses.Dequeue();
-                    Console.WriteLine($"{question} \n> {response}");
-                }
-                else
-                {
-                    response = uiAgent.AskQuestion(question);
-                }
+                BaseAgent agent = agentMap[agentDef.Name];
 
-                uiAgent.ProcessResponse(response);
-
-                if (agent.Name == "Document Generation Agent" &&
-                    response.Trim().Equals("yes", StringComparison.OrdinalIgnoreCase))
+                while (true)
                 {
-                    log.WriteLine("Generating documents...");
-                    docAgent.GenerateDocuments(Path.Combine(outputDir, "conversation.log"), outputDir);
-                    log.WriteLine("Document generated.");
-                }
+                    string? question = agent.GenerateNextQuestion(context);
+                    if (string.IsNullOrEmpty(question))
+                    {
+                        Console.WriteLine($"Activating agent '{agentDef.Name}' with no questions.");
+                        break;
+                    }
 
-                log.WriteLine($"{agent.Name}: {question}");
-                log.WriteLine($"User: {response}");
-                log.WriteLine();
+                    string response = uiAgent.AskQuestion(question);
+
+                    uiAgent.ProcessResponse(response);
+                    agent.ProcessAnswer(response, context);
+
+                    if (agent is DocumentGenerationAgent &&
+                        response.Trim().Equals("yes", StringComparison.OrdinalIgnoreCase))
+                    {
+                        log.WriteLine("Generating documents...");
+                        docAgent.GenerateDocuments(Path.Combine(outputDir, "conversation.log"), outputDir);
+                        log.WriteLine("Document generated.");
+                    }
+
+                    log.WriteLine($"{agentDef.Name}: {question}");
+                    log.WriteLine($"User: {response}");
+                    log.WriteLine();
+                }
             }
         }
         while (engine.MoveNextPhase());
@@ -90,21 +98,5 @@ class Program
         engine.SaveDecisionLog(Path.Combine(outputDir, "decision_log.json"));
     }
 
-    static string GetQuestion(WorkflowPhase phase, string agentName)
-    {
-        return (phase, agentName) switch
-        {
-            (WorkflowPhase.BusinessConceptDevelopment, "Business Strategy Agent")
-                => "What is your core business idea?",
-            (WorkflowPhase.RequirementsDiscovery, "Requirements Gathering Agent")
-                => "What key features should the system have?",
-            (WorkflowPhase.TechnicalSpecification, "Technical Specification Agent")
-                => "Are there specific technologies you plan to use?",
-            (WorkflowPhase.FunctionalDesign, "Functional Design Agent")
-                => "Describe the main user workflow.",
-            (WorkflowPhase.DocumentGenerationAndRefinement, "Document Generation Agent")
-                => "Generate the final document? (yes/no)",
-            _ => string.Empty
-        };
-    }
+    // Questions are now generated dynamically by each agent and not defined here.
 }
