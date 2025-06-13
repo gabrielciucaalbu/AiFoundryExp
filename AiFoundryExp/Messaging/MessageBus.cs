@@ -20,6 +20,16 @@ public class MessageBus : IMessageBus
         _remoteAgents[name] = (client, agent);
     }
 
+    public string Prompt(string recipient, string prompt)
+    {
+        if (_remoteAgents.TryGetValue(recipient, out var remote))
+        {
+            return SendPromptAsync(remote.Client, remote.Agent, prompt).GetAwaiter().GetResult();
+        }
+
+        return string.Empty;
+    }
+
     public void Publish(AgentMessage message)
     {
         if (_logFile is not null)
