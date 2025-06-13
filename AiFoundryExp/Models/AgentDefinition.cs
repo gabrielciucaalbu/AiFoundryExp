@@ -17,8 +17,8 @@ public class AgentDefinition
     public float? TopP { get; set; }
 
     [JsonPropertyName("endpoint")]
-    public string Endpoint { get; set; }
-    
+    public string? Endpoint { get; set; }
+
     [JsonPropertyName("deploymentName")]
-    public string DeploymentName { get; set; }
+    public string? DeploymentName { get; set; }
 }
