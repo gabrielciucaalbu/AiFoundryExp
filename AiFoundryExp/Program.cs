@@ -24,5 +24,17 @@ class Program
             PersistentAgent agent = await factory.EnsureAgentAsync(definition);
             Console.WriteLine($"Ensured agent '{agent.Name}' with ID {agent.Id}");
         }
+
+        OrchestrationEngine engine = await OrchestrationEngine.LoadAsync(configPath);
+
+        do
+        {
+            Console.WriteLine($"\n--- {engine.CurrentPhase} ---");
+            foreach (AgentDefinition agent in engine.GetActiveAgents())
+            {
+                Console.WriteLine($"Activating agent '{agent.Name}'");
+            }
+        }
+        while (engine.MoveNextPhase());
     }
 }
