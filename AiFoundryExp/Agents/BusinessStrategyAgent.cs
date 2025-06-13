@@ -73,6 +73,7 @@ public class BusinessStrategyAgent : BaseAgent
         if (NextFieldIndex < _fields.Length)
         {
             context[_fields[NextFieldIndex]] = answer;
+            NextFieldIndex++;
         }
     }
 }

@@ -93,6 +93,7 @@ public class TechnicalSpecificationAgent : BaseAgent
         if (NextFieldIndex < _fields.Length)
         {
             context[_fields[NextFieldIndex]] = answer;
+            NextFieldIndex++;
         }
     }
 }

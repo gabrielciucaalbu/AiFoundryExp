@@ -44,4 +44,16 @@ public class TechnicalSpecificationAgentTests
         Assert.Contains("Non-Functional Requirements", srs);
         Assert.Contains("python", srs);
     }
+
+    [Fact]
+    public void ProcessAnswer_FillsFieldsSequentially()
+    {
+        TechnicalSpecificationAgent agent = CreateAgent();
+        var context = new Dictionary<string, string>();
+
+        agent.ProcessAnswer(".NET", context);
+        agent.ProcessAnswer("Other", context);
+
+        Assert.Equal(".NET", context["technology_preferences"]);
+    }
 }
