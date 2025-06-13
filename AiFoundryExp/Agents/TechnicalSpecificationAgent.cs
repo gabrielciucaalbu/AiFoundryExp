@@ -85,18 +85,7 @@ public class TechnicalSpecificationAgent : BaseAgent
 
     public override string? GenerateNextQuestion(Dictionary<string, string> context)
     {
-        while (NextFieldIndex < _fields.Length && context.ContainsKey(_fields[NextFieldIndex]))
-        {
-            NextFieldIndex++;
-        }
-
-        if (NextFieldIndex >= _fields.Length)
-        {
-            return null;
-        }
-
-        string field = _fields[NextFieldIndex].Replace('_', ' ');
-        return $"Please provide details about {field}.";
+        return base.GenerateNextQuestion(context);
     }
 
     public override void ProcessAnswer(string answer, Dictionary<string, string> context)

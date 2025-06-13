@@ -66,7 +66,7 @@ public class DocumentGenerationAgent : BaseAgent
             return null;
         }
 
-        return "Generate the final documents now? (yes/no)";
+        return base.GenerateNextQuestion(context);
     }
 
     public override void ProcessAnswer(string answer, Dictionary<string, string> context)

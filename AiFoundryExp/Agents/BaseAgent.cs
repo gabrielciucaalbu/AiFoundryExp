@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace AiFoundryExp.Agents;
 
 public abstract class BaseAgent
@@ -34,9 +36,22 @@ public abstract class BaseAgent
     protected virtual void OnMessageReceived(AgentMessage message) { }
 
     /// <summary>
-    /// Generate the next question needed from the user. Return null if no further information is required.
+    /// Generate the next question needed from the user by prompting the remote
+    /// agent. Returns <c>null</c> if the agent indicates no further questions.
     /// </summary>
-    public virtual string? GenerateNextQuestion(Dictionary<string, string> context) => null;
+    public virtual string? GenerateNextQuestion(Dictionary<string, string> context)
+    {
+        string json = JsonSerializer.Serialize(context);
+        string prompt = $"Given the following context as JSON:\n{json}\n" +
+                        "Provide the next question you would ask the user. " +
+                        "If you have no question, reply with 'none'.";
+
+        string response = Bus.Prompt(Name, prompt).Trim();
+        return string.IsNullOrEmpty(response) ||
+               response.Equals("none", StringComparison.OrdinalIgnoreCase)
+            ? null
+            : response;
+    }
 
     /// <summary>
     /// Process a user answer to the last generated question.
