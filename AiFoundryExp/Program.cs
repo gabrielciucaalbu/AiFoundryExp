@@ -11,14 +11,16 @@ class Program
         string endpoint = Environment.GetEnvironmentVariable("PROJECT_ENDPOINT") ?? "https://your-aiservices-id.services.ai.azure.com/api/projects/your-project";
         string deployment = Environment.GetEnvironmentVariable("MODEL_DEPLOYMENT_NAME") ?? "your-model-deployment";
 
-        string configPath = args.Length > 0 ? args[0] : "agents.json";
+        string configPath = args.Length > 0 ? args[0] : Path.Combine("Configuration", "agents.json");
         AgentsConfiguration config;
         using (FileStream stream = File.OpenRead(configPath))
         {
             config = await JsonSerializer.DeserializeAsync<AgentsConfiguration>(stream) ?? new AgentsConfiguration();
         }
 
-        IReadOnlyList<BaseAgent> agents = AgentRegistry.LoadAgents(configPath);
+        OrchestrationEngine engine = await OrchestrationEngine.LoadAsync(configPath);
+
+        IReadOnlyList<BaseAgent> agents = AgentRegistry.LoadAgents(configPath, engine.Bus);
         UserInteractionAgent uiAgent = agents.OfType<UserInteractionAgent>().First();
 
         string inputFile = Path.Combine("input", "input.text");
@@ -39,8 +41,6 @@ class Program
             PersistentAgent agent = await factory.EnsureAgentAsync(definition);
             Console.WriteLine($"Ensured agent '{agent.Name}' with ID {agent.Id}");
         }
-
-        OrchestrationEngine engine = await OrchestrationEngine.LoadAsync(configPath);
 
         do
         {
