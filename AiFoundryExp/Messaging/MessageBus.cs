@@ -24,7 +24,21 @@ public class MessageBus : IMessageBus
     {
         if (_remoteAgents.TryGetValue(recipient, out var remote))
         {
-            return SendPromptAsync(remote.Client, remote.Agent, prompt).GetAwaiter().GetResult();
+            if (_logFile is not null)
+            {
+                string request = $"{DateTime.UtcNow:o} ->{recipient}: {prompt}";
+                File.AppendAllText(_logFile, request + Environment.NewLine);
+            }
+
+            string response = SendPromptAsync(remote.Client, remote.Agent, prompt).GetAwaiter().GetResult();
+
+            if (_logFile is not null)
+            {
+                string reply = $"{DateTime.UtcNow:o} {recipient}->: {response}";
+                File.AppendAllText(_logFile, reply + Environment.NewLine);
+            }
+
+            return response;
         }
 
         return string.Empty;

@@ -18,7 +18,7 @@ class Program
         string outputDir = InitializeOutputDirectory();
 
         string statePath = Path.Combine(outputDir, "state.json");
-        string messageLog = Path.Combine(outputDir, "messages.log");
+        string messageLog = Path.Combine(outputDir, "agents_comm.log");
 
         OrchestrationEngine engine = await OrchestrationEngine.LoadAsync(configPath, statePath, messageLog);
 
