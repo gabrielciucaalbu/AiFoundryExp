@@ -15,14 +15,14 @@ public class DocumentGenerationAgent : BaseAgent
     /// Generate a document draft incorporating feedback and ensuring consistency.
     /// </summary>
     public void GenerateDocuments(string logPath, string outputDir)
-{
-    Directory.CreateDirectory(outputDir);
-
-    if (!File.Exists(logPath))
     {
-        Console.WriteLine($"Conversation log not found: {logPath}");
-        return;
-    }
+        Directory.CreateDirectory(outputDir);
+
+        if (!File.Exists(logPath))
+        {
+            Console.WriteLine($"Conversation log not found: {logPath}");
+            return;
+        }
 
         StringBuilder businessPlan = new();
         StringBuilder srs = new();
