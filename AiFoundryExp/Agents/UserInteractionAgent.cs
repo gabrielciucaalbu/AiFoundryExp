@@ -8,18 +8,20 @@ public class UserInteractionAgent : BaseAgent
     public UserInteractionAgent(AgentDefinition definition, IMessageBus bus) : base(definition, bus) { }
 
     /// <summary>
-    /// Present a question to the user.
+    /// Present a question to the user and return their response.
     /// </summary>
-    public void AskQuestion(string question)
+    public string AskQuestion(string question)
     {
-        // Implementation would tailor language and output to the user's skill level.
+        Console.Write(question + " \u003e ");
+        return Console.ReadLine() ?? string.Empty;
     }
 
     /// <summary>
     /// Interpret a user response and convert it into structured data for other agents.
+    /// Currently this simply echoes the response.
     /// </summary>
     public void ProcessResponse(string response)
     {
-        // Implementation would parse the response and pass it to the orchestrator.
+        Console.WriteLine($"Received: {response}");
     }
 }

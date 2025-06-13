@@ -1,5 +1,7 @@
 using Azure.AI.Agents.Persistent;
 using System.Text.Json;
+using AiFoundryExp.Agents;
+using System.Linq;
 
 namespace AiFoundryExp;
 
@@ -17,6 +19,20 @@ class Program
             config = await JsonSerializer.DeserializeAsync<AgentsConfiguration>(stream) ?? new AgentsConfiguration();
         }
 
+        IReadOnlyList<BaseAgent> agents = AgentRegistry.LoadAgents(configPath);
+        UserInteractionAgent uiAgent = agents.OfType<UserInteractionAgent>().First();
+
+        string inputFile = Path.Combine("input", "input.text");
+        Queue<string> pendingResponses = new();
+        if (File.Exists(inputFile))
+        {
+            pendingResponses.Enqueue(File.ReadAllText(inputFile).Trim());
+        }
+
+        string outputDir = "output";
+        Directory.CreateDirectory(outputDir);
+        using StreamWriter log = new(Path.Combine(outputDir, "conversation.log"));
+
         AgentFactory factory = new AgentFactory(endpoint, deployment);
 
         foreach (AgentDefinition definition in config.Agents)
@@ -30,11 +46,52 @@ class Program
         do
         {
             Console.WriteLine($"\n--- {engine.CurrentPhase} ---");
+            log.WriteLine($"--- {engine.CurrentPhase} ---");
+
             foreach (AgentDefinition agent in engine.GetActiveAgents())
             {
-                Console.WriteLine($"Activating agent '{agent.Name}'");
+                string question = GetQuestion(engine.CurrentPhase, agent.Name);
+                if (string.IsNullOrEmpty(question))
+                {
+                    Console.WriteLine($"Activating agent '{agent.Name}'");
+                    continue;
+                }
+
+                string response;
+                if (pendingResponses.Count > 0)
+                {
+                    response = pendingResponses.Dequeue();
+                    Console.WriteLine($"{question} \n> {response}");
+                }
+                else
+                {
+                    response = uiAgent.AskQuestion(question);
+                }
+
+                uiAgent.ProcessResponse(response);
+                log.WriteLine($"{agent.Name}: {question}");
+                log.WriteLine($"User: {response}");
+                log.WriteLine();
             }
         }
         while (engine.MoveNextPhase());
+    }
+
+    static string GetQuestion(WorkflowPhase phase, string agentName)
+    {
+        return (phase, agentName) switch
+        {
+            (WorkflowPhase.BusinessConceptDevelopment, "Business Strategy Agent")
+                => "What is your core business idea?",
+            (WorkflowPhase.RequirementsDiscovery, "Requirements Gathering Agent")
+                => "What key features should the system have?",
+            (WorkflowPhase.TechnicalSpecification, "Technical Specification Agent")
+                => "Are there specific technologies you plan to use?",
+            (WorkflowPhase.FunctionalDesign, "Functional Design Agent")
+                => "Describe the main user workflow.",
+            (WorkflowPhase.DocumentGenerationAndRefinement, "Document Generation Agent")
+                => "Generate the final document? (yes/no)",
+            _ => string.Empty
+        };
     }
 }
