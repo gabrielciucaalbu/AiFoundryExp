@@ -1,5 +1,6 @@
 using AiFoundryExp.Agents;
 using AiFoundryExp;
+using Azure.AI.Agents.Persistent;
 
 namespace AiFoundryExp.Tests;
 
@@ -19,6 +20,9 @@ public class OrchestrationAgentTests
         public void Subscribe(string recipient, Action<AgentMessage> handler) => _inner.Subscribe(recipient, handler);
 
         public void Unsubscribe(string recipient, Action<AgentMessage> handler) => _inner.Unsubscribe(recipient, handler);
+
+        public void RegisterRemoteAgent(string name, PersistentAgentsClient client, PersistentAgent agent)
+            => _inner.RegisterRemoteAgent(name, client, agent);
     }
 
     private static OrchestrationAgent CreateAgent() =>

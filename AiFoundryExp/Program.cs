@@ -43,6 +43,8 @@ class Program
         {
             PersistentAgent agent = await factory.EnsureAgentAsync(definition);
             Console.WriteLine($"Ensured agent '{agent.Name}' with ID {agent.Id}");
+            PersistentAgentsClient client = factory.GetClient(string.IsNullOrWhiteSpace(definition.Endpoint) ? endpoint : definition.Endpoint!);
+            engine.Bus.RegisterRemoteAgent(definition.Name, client, agent);
         }
 
         do

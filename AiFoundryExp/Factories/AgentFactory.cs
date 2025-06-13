@@ -18,7 +18,7 @@ public class AgentFactory
         _defaultModelDeployment = defaultModelDeploymentName;
     }
 
-    private PersistentAgentsClient GetClient(string endpoint)
+    public PersistentAgentsClient GetClient(string endpoint)
     {
         if (!_clients.TryGetValue(endpoint, out PersistentAgentsClient? client))
         {
