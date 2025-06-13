@@ -8,24 +8,21 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        string endpoint = Environment.GetEnvironmentVariable("PROJECT_ENDPOINT") ?? "https://agentic-experim-resource.services.ai.azure.com/api/projects/agentic-experim";
-        string deployment = Environment.GetEnvironmentVariable("MODEL_DEPLOYMENT_NAME") ?? "your-model-deployment";
+        string endpoint = Environment.GetEnvironmentVariable("PROJECT_ENDPOINT") ??
+            "https://agentic-experim-resource.services.ai.azure.com/api/projects/agentic-experim";
+        string deployment = Environment.GetEnvironmentVariable("MODEL_DEPLOYMENT_NAME") ??
+            "your-model-deployment";
 
         string configPath = args.Length > 0 ? args[0] : Path.Combine("Configuration", "agents.json");
-        AgentsConfiguration config;
-        using (FileStream stream = File.OpenRead(configPath))
-        {
-            config = await JsonSerializer.DeserializeAsync<AgentsConfiguration>(stream) ?? new AgentsConfiguration();
-        }
 
-        string outputDir = "output";
-        Directory.CreateDirectory(outputDir);
+        AgentsConfiguration config = await LoadConfiguration(configPath);
+
+        string outputDir = InitializeOutputDirectory();
         string statePath = Path.Combine(outputDir, "state.json");
         string messageLog = Path.Combine(outputDir, "messages.log");
         OrchestrationEngine engine = await OrchestrationEngine.LoadAsync(configPath, statePath, messageLog);
 
-        IReadOnlyList<BaseAgent> agents = AgentRegistry.LoadAgents(configPath, engine.Bus);
-        Dictionary<string, BaseAgent> agentMap = agents.ToDictionary(a => a.Name);
+        Dictionary<string, BaseAgent> agentMap = InitializeAgents(configPath, engine);
         UserInteractionAgent uiAgent = (UserInteractionAgent)agentMap["User Interaction Agent"];
         DocumentGenerationAgent docAgent = (DocumentGenerationAgent)agentMap["Document Generation Agent"];
 
@@ -36,15 +33,52 @@ class Program
         using StreamWriter log = new(logStream);
 
         AgentFactory factory = new AgentFactory(endpoint, deployment);
+        await RegisterPersistentAgents(config, factory, engine, endpoint);
 
+        await RunWorkflow(engine, agentMap, uiAgent, docAgent, context, outputDir, log);
+
+        engine.SaveDecisionLog(Path.Combine(outputDir, "decision_log.json"));
+    }
+
+    private static async Task<AgentsConfiguration> LoadConfiguration(string path)
+    {
+        using FileStream stream = File.OpenRead(path);
+        return await JsonSerializer.DeserializeAsync<AgentsConfiguration>(stream) ?? new AgentsConfiguration();
+    }
+
+    private static string InitializeOutputDirectory()
+    {
+        const string dir = "output";
+        Directory.CreateDirectory(dir);
+        return dir;
+    }
+
+    private static Dictionary<string, BaseAgent> InitializeAgents(string configPath, OrchestrationEngine engine)
+    {
+        IReadOnlyList<BaseAgent> agents = AgentRegistry.LoadAgents(configPath, engine.Bus);
+        return agents.ToDictionary(a => a.Name);
+    }
+
+    private static async Task RegisterPersistentAgents(AgentsConfiguration config, AgentFactory factory, OrchestrationEngine engine, string defaultEndpoint)
+    {
         foreach (AgentDefinition definition in config.Agents)
         {
             PersistentAgent agent = await factory.EnsureAgentAsync(definition);
             Console.WriteLine($"Ensured agent '{agent.Name}' with ID {agent.Id}");
-            PersistentAgentsClient client = factory.GetClient(string.IsNullOrWhiteSpace(definition.Endpoint) ? endpoint : definition.Endpoint!);
+            PersistentAgentsClient client = factory.GetClient(string.IsNullOrWhiteSpace(definition.Endpoint) ? defaultEndpoint : definition.Endpoint!);
             engine.Bus.RegisterRemoteAgent(definition.Name, client, agent);
         }
+    }
 
+    private static async Task RunWorkflow(
+        OrchestrationEngine engine,
+        Dictionary<string, BaseAgent> agentMap,
+        UserInteractionAgent uiAgent,
+        DocumentGenerationAgent docAgent,
+        Dictionary<string, string> context,
+        string outputDir,
+        StreamWriter log)
+    {
         do
         {
             Console.WriteLine($"\n--- {engine.CurrentPhase} ---");
@@ -88,8 +122,6 @@ class Program
             }
         }
         while (engine.MoveNextPhase());
-
-        engine.SaveDecisionLog(Path.Combine(outputDir, "decision_log.json"));
     }
 
     // Questions are now generated dynamically by each agent and not defined here.
