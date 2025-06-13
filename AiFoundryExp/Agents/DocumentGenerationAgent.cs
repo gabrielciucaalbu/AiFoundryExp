@@ -5,7 +5,7 @@ namespace AiFoundryExp.Agents;
 /// </summary>
 public class DocumentGenerationAgent : BaseAgent
 {
-    public DocumentGenerationAgent(AgentDefinition definition) : base(definition) { }
+    public DocumentGenerationAgent(AgentDefinition definition, IMessageBus bus) : base(definition, bus) { }
 
     /// <summary>
     /// Generate a document draft incorporating feedback and ensuring consistency.

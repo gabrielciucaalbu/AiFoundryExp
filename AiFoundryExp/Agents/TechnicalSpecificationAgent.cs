@@ -5,7 +5,7 @@ namespace AiFoundryExp.Agents;
 /// </summary>
 public class TechnicalSpecificationAgent : BaseAgent
 {
-    public TechnicalSpecificationAgent(AgentDefinition definition) : base(definition) { }
+    public TechnicalSpecificationAgent(AgentDefinition definition, IMessageBus bus) : base(definition, bus) { }
 
     /// <summary>
     /// Define system architecture and interfaces.
