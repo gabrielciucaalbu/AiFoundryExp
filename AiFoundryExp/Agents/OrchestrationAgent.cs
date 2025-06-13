@@ -5,14 +5,53 @@ namespace AiFoundryExp.Agents;
 /// </summary>
 public class OrchestrationAgent : BaseAgent
 {
+    private readonly List<AgentMessage> _inbox = new();
+    private readonly Dictionary<string, string> _context = new(StringComparer.OrdinalIgnoreCase);
+    private HashSet<string> _knownAgents = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Engine controlling workflow progression. When set, the current phase will
+    /// be used to choose which agents are activated.
+    /// </summary>
+    public OrchestrationEngine? Engine { get; set; }
+
     public OrchestrationAgent(AgentDefinition definition, IMessageBus bus) : base(definition, bus) { }
+
+    protected override void OnMessageReceived(AgentMessage message)
+    {
+        lock (_inbox)
+        {
+            _inbox.Add(message);
+        }
+    }
 
     /// <summary>
     /// Determine which specialized agents should run based on the current phase and user inputs.
     /// </summary>
     public void ActivateNextAgents(IEnumerable<BaseAgent> agents)
     {
-        // Implementation would contain logic to choose and schedule agents.
+        ArgumentNullException.ThrowIfNull(agents);
+
+        _knownAgents = new HashSet<string>(agents.Select(a => a.Name), StringComparer.OrdinalIgnoreCase);
+
+        if (Engine is null)
+        {
+            return;
+        }
+
+        HashSet<string> active = Engine.GetActiveAgents().Select(a => a.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (BaseAgent agent in agents)
+        {
+            if (agent.Name.Equals(Name, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (active.Contains(agent.Name))
+            {
+                Send(agent.Name, "activate");
+            }
+        }
     }
 
     /// <summary>
@@ -20,7 +59,43 @@ public class OrchestrationAgent : BaseAgent
     /// </summary>
     public void MaintainContext()
     {
-        // Implementation would update and distribute shared context.
+        List<AgentMessage> messages;
+        lock (_inbox)
+        {
+            messages = new List<AgentMessage>(_inbox);
+            _inbox.Clear();
+        }
+
+        foreach (AgentMessage msg in messages)
+        {
+            string content = msg.Content;
+            int sep = content.IndexOf('=');
+            if (sep < 0)
+                sep = content.IndexOf(':');
+            if (sep > 0)
+            {
+                string key = content[..sep].Trim();
+                string value = content[(sep + 1)..].Trim();
+                if (!string.IsNullOrEmpty(key))
+                {
+                    _context[key] = value;
+                }
+            }
+        }
+
+        if (_knownAgents.Count == 0)
+        {
+            return;
+        }
+
+        string payload = string.Join(";", _context.Select(kv => $"{kv.Key}={kv.Value}"));
+        foreach (string agentName in _knownAgents)
+        {
+            if (agentName.Equals(Name, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            Send(agentName, payload);
+        }
     }
 
     /// <summary>
