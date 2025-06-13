@@ -89,3 +89,7 @@ docker run \
   -v $(pwd)/output:/app/output \
   aifoundryexp
 ```
+
+The `output` directory will contain various logs. `conversation.log` captures the
+dialogue with the user while `agents_comm.log` records all prompts and responses
+exchanged between the agents.
