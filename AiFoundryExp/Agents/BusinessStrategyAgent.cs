@@ -12,17 +12,37 @@ public class BusinessStrategyAgent : BaseAgent
     /// <summary>
     /// Build a comprehensive business model from user input.
     /// </summary>
-    public void BuildBusinessModel()
+    public BusinessModel BuildBusinessModel(Dictionary<string, string> context)
     {
-        // Implementation would generate a model including value proposition, target markets and revenue plans.
+        ArgumentNullException.ThrowIfNull(context);
+
+        context.TryGetValue("business_idea", out string? idea);
+        context.TryGetValue("target_market", out string? market);
+        context.TryGetValue("revenue_model", out string? revenue);
+
+        return new BusinessModel
+        {
+            BusinessIdea = idea ?? string.Empty,
+            TargetMarket = market ?? string.Empty,
+            RevenueModel = revenue ?? string.Empty
+        };
     }
 
     /// <summary>
     /// Request additional clarification from the user through the User Interaction Agent.
     /// </summary>
-    public void RequestClarification()
+    public void RequestClarification(Dictionary<string, string> context)
     {
-        // Implementation would formulate questions for missing business details.
+        ArgumentNullException.ThrowIfNull(context);
+
+        foreach (string field in _fields)
+        {
+            if (!context.TryGetValue(field, out string? value) || string.IsNullOrWhiteSpace(value))
+            {
+                string readable = field.Replace('_', ' ');
+                Send("User Interaction Agent", $"Could you clarify your {readable}?");
+            }
+        }
     }
 
     public override string? GenerateNextQuestion(Dictionary<string, string> context)
