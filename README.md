@@ -92,4 +92,5 @@ docker run \
 
 The `output` directory will contain various logs. `conversation.log` captures the
 dialogue with the user while `agents_comm.log` records all prompts and responses
-exchanged between the agents.
+exchanged between the agents. It also logs each question that is presented to
+the user.
