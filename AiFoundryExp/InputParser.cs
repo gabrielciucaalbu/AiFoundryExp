@@ -10,13 +10,27 @@ public static class InputParser
 {
     public static Dictionary<string, string> ParseFile(string path)
     {
-        var context = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         if (!File.Exists(path))
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        string text = File.ReadAllText(path);
+        return ParseTextInternal(text, "business_idea");
+    }
+
+    /// <summary>
+    /// Parse free-form text entered by a user. Supports JSON or key/value pairs.
+    /// Unstructured text is returned under the key "value".
+    /// </summary>
+    public static Dictionary<string, string> ParseText(string text)
+        => ParseTextInternal(text, "value");
+
+    private static Dictionary<string, string> ParseTextInternal(string text, string defaultKey)
+    {
+        var context = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (string.IsNullOrWhiteSpace(text))
             return context;
 
-        string text = File.ReadAllText(path).Trim();
-        if (string.IsNullOrEmpty(text))
-            return context;
+        text = text.Trim();
 
         if (text.StartsWith("{") || text.StartsWith("[") )
         {
@@ -38,10 +52,10 @@ public static class InputParser
             }
         }
 
-        string[] lines = File.ReadAllLines(path);
+        string[] lines = text.Split(new[] {'\n', '\r'}, StringSplitOptions.RemoveEmptyEntries);
         if (lines.Length == 1 && !lines[0].Contains(':') && !lines[0].Contains('='))
         {
-            context["business_idea"] = lines[0].Trim();
+            context[defaultKey] = lines[0].Trim();
             return context;
         }
 
@@ -67,7 +81,7 @@ public static class InputParser
 
         if (context.Count == 0 && !string.IsNullOrEmpty(text))
         {
-            context["business_idea"] = text;
+            context[defaultKey] = text;
         }
 
         return context;
