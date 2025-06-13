@@ -27,7 +27,7 @@ public class AgentFactory
         float? temperature = null,
         float? topP = null)
     {
-        tools ??= new List<ToolDefinition>();
+        tools ??= [];
 
         await foreach (PersistentAgent existing in _client.Administration.GetAgentsAsync())
         {
@@ -56,7 +56,7 @@ public class AgentFactory
         float? temperature = null,
         float? topP = null)
     {
-        tools ??= new List<ToolDefinition>();
+        tools ??= [];
         return await _client.Administration.UpdateAgentAsync(
             assistantId: agentId,
             model: _modelDeployment,
