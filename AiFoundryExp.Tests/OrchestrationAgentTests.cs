@@ -1,6 +1,3 @@
-using System.IO;
-using Xunit;
-using AiFoundryExp;
 using AiFoundryExp.Agents;
 
 namespace AiFoundryExp.Tests;

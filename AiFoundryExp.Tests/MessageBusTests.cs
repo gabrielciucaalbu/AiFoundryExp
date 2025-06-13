@@ -1,6 +1,3 @@
-using Xunit;
-using AiFoundryExp;
-
 namespace AiFoundryExp.Tests;
 
 public class MessageBusTests

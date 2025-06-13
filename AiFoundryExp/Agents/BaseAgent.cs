@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace AiFoundryExp.Agents;
 
 public abstract class BaseAgent
