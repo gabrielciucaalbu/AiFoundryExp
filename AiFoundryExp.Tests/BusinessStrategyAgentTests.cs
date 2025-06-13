@@ -86,4 +86,17 @@ public class BusinessStrategyAgentTests
                 Directory.Delete(dir);
         }
     }
+
+    [Fact]
+    public void ProcessAnswer_FillsFieldsSequentially()
+    {
+        BusinessStrategyAgent agent = CreateAgent(new MessageBus());
+        var context = new Dictionary<string, string>();
+
+        agent.ProcessAnswer("Idea", context);
+        agent.ProcessAnswer("Market", context);
+
+        Assert.Equal("Idea", context["business_idea"]);
+        Assert.Equal("Market", context["target_market"]);
+    }
 }

@@ -78,6 +78,7 @@ public class RequirementsGatheringAgent : BaseAgent
         if (NextFieldIndex < _fields.Length)
         {
             context[_fields[NextFieldIndex]] = answer;
+            NextFieldIndex++;
         }
     }
 }
