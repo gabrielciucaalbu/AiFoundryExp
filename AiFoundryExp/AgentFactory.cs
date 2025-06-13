@@ -70,4 +70,26 @@ public class AgentFactory
             responseFormat: null,
             metadata: null);
     }
+
+    public async Task<PersistentAgent> EnsureAgentAsync(AgentDefinition definition)
+    {
+        await foreach (PersistentAgent existing in _client.Administration.GetAgentsAsync())
+        {
+            if (string.Equals(existing.Name, definition.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                return await UpdateAgentAsync(
+                    agentId: existing.Id,
+                    name: definition.Name,
+                    instructions: definition.Instructions,
+                    temperature: definition.Temperature,
+                    topP: definition.TopP);
+            }
+        }
+
+        return await CreateAgentAsync(
+            name: definition.Name,
+            instructions: definition.Instructions,
+            temperature: definition.Temperature,
+            topP: definition.TopP);
+    }
 }
