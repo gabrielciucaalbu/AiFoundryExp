@@ -18,7 +18,11 @@ class Program
             config = await JsonSerializer.DeserializeAsync<AgentsConfiguration>(stream) ?? new AgentsConfiguration();
         }
 
-        OrchestrationEngine engine = await OrchestrationEngine.LoadAsync(configPath);
+        string outputDir = "output";
+        Directory.CreateDirectory(outputDir);
+        string statePath = Path.Combine(outputDir, "state.json");
+        string messageLog = Path.Combine(outputDir, "messages.log");
+        OrchestrationEngine engine = await OrchestrationEngine.LoadAsync(configPath, statePath, messageLog);
 
         IReadOnlyList<BaseAgent> agents = AgentRegistry.LoadAgents(configPath, engine.Bus);
         UserInteractionAgent uiAgent = agents.OfType<UserInteractionAgent>().First();
@@ -31,9 +35,7 @@ class Program
             pendingResponses.Enqueue(File.ReadAllText(inputFile).Trim());
         }
 
-        string outputDir = "output";
-        Directory.CreateDirectory(outputDir);
-        using StreamWriter log = new(Path.Combine(outputDir, "conversation.log"));
+        using StreamWriter log = new(Path.Combine(outputDir, "conversation.log"), append: true);
 
         AgentFactory factory = new AgentFactory(endpoint, deployment);
 
@@ -69,6 +71,14 @@ class Program
                 }
 
                 uiAgent.ProcessResponse(response);
+                if (agent.Name == "Document Generation Agent" &&
+                    response.Trim().Equals("yes", StringComparison.OrdinalIgnoreCase))
+                {
+                    DocumentGenerationAgent docAgent = (DocumentGenerationAgent)agents.First(a => a is DocumentGenerationAgent);
+                    docAgent.GenerateDocuments(outputDir);
+                    log.WriteLine("Document generated.");
+                }
+
                 log.WriteLine($"{agent.Name}: {question}");
                 log.WriteLine($"User: {response}");
                 log.WriteLine();
@@ -82,6 +92,8 @@ class Program
             }
         }
         while (engine.MoveNextPhase());
+
+        engine.SaveDecisionLog(Path.Combine(outputDir, "decision_log.json"));
     }
 
     static string GetQuestion(WorkflowPhase phase, string agentName)
