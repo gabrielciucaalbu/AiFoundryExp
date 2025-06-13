@@ -40,7 +40,10 @@ class Program
             }
         }
 
-        using StreamWriter log = new(Path.Combine(outputDir, "conversation.log"), append: true);
+        using FileStream logStream =
+            new(Path.Combine(outputDir, "conversation.log"),
+                FileMode.Append, FileAccess.Write, FileShare.Read);
+        using StreamWriter log = new(logStream);
 
         AgentFactory factory = new AgentFactory(endpoint, deployment);
 
