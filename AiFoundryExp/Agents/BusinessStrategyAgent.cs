@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace AiFoundryExp.Agents;
 
 /// <summary>
@@ -6,6 +8,8 @@ namespace AiFoundryExp.Agents;
 public class BusinessStrategyAgent : BaseAgent
 {
     public BusinessStrategyAgent(AgentDefinition definition, IMessageBus bus) : base(definition, bus) { }
+
+    private readonly string[] _fields = ["business_idea", "target_market", "revenue_model"]; 
 
     /// <summary>
     /// Build a comprehensive business model from user input.
@@ -21,5 +25,29 @@ public class BusinessStrategyAgent : BaseAgent
     public void RequestClarification()
     {
         // Implementation would formulate questions for missing business details.
+    }
+
+    public override string? GenerateNextQuestion(Dictionary<string, string> context)
+    {
+        while (NextFieldIndex < _fields.Length && context.ContainsKey(_fields[NextFieldIndex]))
+        {
+            NextFieldIndex++;
+        }
+
+        if (NextFieldIndex >= _fields.Length)
+        {
+            return null;
+        }
+
+        string field = _fields[NextFieldIndex].Replace('_', ' ');
+        return $"Please provide details about your {field}.";
+    }
+
+    public override void ProcessAnswer(string answer, Dictionary<string, string> context)
+    {
+        if (NextFieldIndex < _fields.Length)
+        {
+            context[_fields[NextFieldIndex]] = answer;
+        }
     }
 }

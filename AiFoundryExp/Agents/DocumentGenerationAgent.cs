@@ -1,5 +1,6 @@
 using System.Text;
 using System.IO;
+using System.Collections.Generic;
 
 namespace AiFoundryExp.Agents;
 
@@ -10,10 +11,12 @@ public class DocumentGenerationAgent : BaseAgent
 {
     public DocumentGenerationAgent(AgentDefinition definition, IMessageBus bus) : base(definition, bus) { }
 
+    private bool _confirmed;
+
     /// <summary>
     /// Generate a document draft incorporating feedback and ensuring consistency.
     /// </summary>
-public void GenerateDocuments(string logPath, string outputDir)
+    public void GenerateDocuments(string logPath, string outputDir)
 {
     Directory.CreateDirectory(outputDir);
 
@@ -50,5 +53,23 @@ public void GenerateDocuments(string logPath, string outputDir)
         File.WriteAllText(Path.Combine(outputDir, "FunctionalSpec.txt"), functionalSpec.ToString());
 
         Console.WriteLine($"Documents generated in '{outputDir}'.");
+    }
+
+    public override string? GenerateNextQuestion(Dictionary<string, string> context)
+    {
+        if (_confirmed)
+        {
+            return null;
+        }
+
+        return "Generate the final documents now? (yes/no)";
+    }
+
+    public override void ProcessAnswer(string answer, Dictionary<string, string> context)
+    {
+        if (answer.Trim().Equals("yes", StringComparison.OrdinalIgnoreCase))
+        {
+            _confirmed = true;
+        }
     }
 }
