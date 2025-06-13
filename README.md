@@ -36,6 +36,8 @@ The system employs a distributed agent architecture where each agent specializes
 
 The agents communicate through a sophisticated message-passing system coordinated by the Orchestration Agent. Each agent maintains its own knowledge base while sharing relevant information through a common data layer. This architecture ensures that agents can work independently while maintaining coherence across the entire system.
 
+The repository includes a lightweight **MessageBus** implementation that allows agents to publish and subscribe to `AgentMessage` objects. Every agent registers with the bus on creation and can send structured messages to other agents without direct references, enabling loose coupling and simple extension of the protocol.
+
 ### Workflow Phases
 
 The system operates through distinct phases, each involving specific agents working together to achieve phase objectives.
