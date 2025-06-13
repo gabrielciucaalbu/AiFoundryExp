@@ -7,7 +7,7 @@ namespace AiFoundryExp.Agents;
 /// </summary>
 public static class AgentRegistry
 {
-    public static IReadOnlyList<BaseAgent> LoadAgents(string configPath)
+    public static IReadOnlyList<BaseAgent> LoadAgents(string configPath, IMessageBus bus)
     {
         using FileStream stream = File.OpenRead(configPath);
         AgentsConfiguration config =
@@ -18,13 +18,13 @@ public static class AgentRegistry
         {
             BaseAgent? agent = def.Name switch
             {
-                "Orchestration Agent" => new OrchestrationAgent(def),
-                "Business Strategy Agent" => new BusinessStrategyAgent(def),
-                "Requirements Gathering Agent" => new RequirementsGatheringAgent(def),
-                "Technical Specification Agent" => new TechnicalSpecificationAgent(def),
-                "Functional Design Agent" => new FunctionalDesignAgent(def),
-                "User Interaction Agent" => new UserInteractionAgent(def),
-                "Document Generation Agent" => new DocumentGenerationAgent(def),
+                "Orchestration Agent" => new OrchestrationAgent(def, bus),
+                "Business Strategy Agent" => new BusinessStrategyAgent(def, bus),
+                "Requirements Gathering Agent" => new RequirementsGatheringAgent(def, bus),
+                "Technical Specification Agent" => new TechnicalSpecificationAgent(def, bus),
+                "Functional Design Agent" => new FunctionalDesignAgent(def, bus),
+                "User Interaction Agent" => new UserInteractionAgent(def, bus),
+                "Document Generation Agent" => new DocumentGenerationAgent(def, bus),
                 _ => null
             };
 

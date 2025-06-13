@@ -5,7 +5,7 @@ namespace AiFoundryExp.Agents;
 /// </summary>
 public class OrchestrationAgent : BaseAgent
 {
-    public OrchestrationAgent(AgentDefinition definition) : base(definition) { }
+    public OrchestrationAgent(AgentDefinition definition, IMessageBus bus) : base(definition, bus) { }
 
     /// <summary>
     /// Determine which specialized agents should run based on the current phase and user inputs.

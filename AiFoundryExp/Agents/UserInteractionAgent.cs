@@ -5,7 +5,7 @@ namespace AiFoundryExp.Agents;
 /// </summary>
 public class UserInteractionAgent : BaseAgent
 {
-    public UserInteractionAgent(AgentDefinition definition) : base(definition) { }
+    public UserInteractionAgent(AgentDefinition definition, IMessageBus bus) : base(definition, bus) { }
 
     /// <summary>
     /// Present a question to the user.

@@ -5,7 +5,7 @@ namespace AiFoundryExp.Agents;
 /// </summary>
 public class BusinessStrategyAgent : BaseAgent
 {
-    public BusinessStrategyAgent(AgentDefinition definition) : base(definition) { }
+    public BusinessStrategyAgent(AgentDefinition definition, IMessageBus bus) : base(definition, bus) { }
 
     /// <summary>
     /// Build a comprehensive business model from user input.

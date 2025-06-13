@@ -5,7 +5,7 @@ namespace AiFoundryExp.Agents;
 /// </summary>
 public class RequirementsGatheringAgent : BaseAgent
 {
-    public RequirementsGatheringAgent(AgentDefinition definition) : base(definition) { }
+    public RequirementsGatheringAgent(AgentDefinition definition, IMessageBus bus) : base(definition, bus) { }
 
     /// <summary>
     /// Explore user needs and constraints to define system requirements.

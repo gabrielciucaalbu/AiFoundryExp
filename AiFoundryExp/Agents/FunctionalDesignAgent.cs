@@ -5,7 +5,7 @@ namespace AiFoundryExp.Agents;
 /// </summary>
 public class FunctionalDesignAgent : BaseAgent
 {
-    public FunctionalDesignAgent(AgentDefinition definition) : base(definition) { }
+    public FunctionalDesignAgent(AgentDefinition definition, IMessageBus bus) : base(definition, bus) { }
 
     /// <summary>
     /// Create detailed descriptions of system behavior and user interaction.

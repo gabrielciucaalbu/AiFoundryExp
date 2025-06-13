@@ -18,12 +18,14 @@ public enum WorkflowPhase
 public class OrchestrationEngine
 {
     private readonly Dictionary<string, AgentDefinition> _agents;
+    public IMessageBus Bus { get; }
 
     public WorkflowPhase CurrentPhase { get; private set; } = WorkflowPhase.BusinessConceptDevelopment;
 
     private OrchestrationEngine(IEnumerable<AgentDefinition> agents)
     {
         _agents = agents.ToDictionary(a => a.Name, StringComparer.OrdinalIgnoreCase);
+        Bus = new MessageBus();
     }
 
     public static async Task<OrchestrationEngine> LoadAsync(string configPath)
