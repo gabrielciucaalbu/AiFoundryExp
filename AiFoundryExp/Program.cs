@@ -32,9 +32,7 @@ class Program
         string inputFile = Path.Combine("input", "input.text");
         Dictionary<string, string> context = InputParser.ParseFile(inputFile);
 
-        using FileStream logStream =
-            new(Path.Combine(outputDir, "conversation.log"),
-                FileMode.Append, FileAccess.Write, FileShare.Read);
+        using var logStream = new FileStream(Path.Combine(outputDir, "conversation.log"), FileMode.Append, FileAccess.Write, FileShare.Read);
         using StreamWriter log = new(logStream);
 
         AgentFactory factory = new AgentFactory(endpoint, deployment);

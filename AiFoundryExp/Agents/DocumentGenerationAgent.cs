@@ -28,20 +28,27 @@ public class DocumentGenerationAgent : BaseAgent
         StringBuilder srs = new();
         StringBuilder functionalSpec = new();
 
-        foreach (string line in File.ReadLines(logPath))
+        using (var stream = new FileStream(logPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
         {
-            if (line.StartsWith("Business Strategy Agent:"))
+            stream.Position = 0; // Ensure we read from the start
+            using var reader = new StreamReader(stream);
+            string? line;
+
+            while ((line = reader.ReadLine()) != null)
             {
-                businessPlan.AppendLine(line.Substring("Business Strategy Agent:".Length).Trim());
-            }
-            else if (line.StartsWith("Requirements Gathering Agent:") ||
-                     line.StartsWith("Technical Specification Agent:"))
-            {
-                srs.AppendLine(line.Substring(line.IndexOf(':') + 1).Trim());
-            }
-            else if (line.StartsWith("Functional Design Agent:"))
-            {
-                functionalSpec.AppendLine(line.Substring("Functional Design Agent:".Length).Trim());
+                if (line.StartsWith("Business Strategy Agent:"))
+                {
+                    businessPlan.AppendLine(line.Substring("Business Strategy Agent:".Length).Trim());
+                }
+                else if (line.StartsWith("Requirements Gathering Agent:") ||
+                         line.StartsWith("Technical Specification Agent:"))
+                {
+                    srs.AppendLine(line.Substring(line.IndexOf(':') + 1).Trim());
+                }
+                else if (line.StartsWith("Functional Design Agent:"))
+                {
+                    functionalSpec.AppendLine(line.Substring("Functional Design Agent:".Length).Trim());
+                }
             }
         }
 
