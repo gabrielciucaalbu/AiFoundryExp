@@ -71,24 +71,18 @@ class Program
                 }
 
                 uiAgent.ProcessResponse(response);
-                if (agent.Name == "Document Generation Agent" &&
-                    response.Trim().Equals("yes", StringComparison.OrdinalIgnoreCase))
-                {
-                    DocumentGenerationAgent docAgent = (DocumentGenerationAgent)agents.First(a => a is DocumentGenerationAgent);
-                    docAgent.GenerateDocuments(outputDir);
-                    log.WriteLine("Document generated.");
-                }
-
-                log.WriteLine($"{agent.Name}: {question}");
-                log.WriteLine($"User: {response}");
-                log.WriteLine();
 
                 if (agent.Name == "Document Generation Agent" &&
                     response.Trim().Equals("yes", StringComparison.OrdinalIgnoreCase))
                 {
                     log.WriteLine("Generating documents...");
                     docAgent.GenerateDocuments(Path.Combine(outputDir, "conversation.log"), outputDir);
+                    log.WriteLine("Document generated.");
                 }
+
+                log.WriteLine($"{agent.Name}: {question}");
+                log.WriteLine($"User: {response}");
+                log.WriteLine();
             }
         }
         while (engine.MoveNextPhase());
