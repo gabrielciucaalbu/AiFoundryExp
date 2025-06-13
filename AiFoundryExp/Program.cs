@@ -30,15 +30,7 @@ class Program
         DocumentGenerationAgent docAgent = (DocumentGenerationAgent)agentMap["Document Generation Agent"];
 
         string inputFile = Path.Combine("input", "input.text");
-        Dictionary<string, string> context = new();
-        if (File.Exists(inputFile))
-        {
-            string initial = File.ReadAllText(inputFile).Trim();
-            if (!string.IsNullOrEmpty(initial))
-            {
-                context["business_idea"] = initial;
-            }
-        }
+        Dictionary<string, string> context = InputParser.ParseFile(inputFile);
 
         using FileStream logStream =
             new(Path.Combine(outputDir, "conversation.log"),
