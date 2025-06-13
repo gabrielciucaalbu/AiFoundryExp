@@ -10,8 +10,10 @@ public class DocumentGenerationAgent : BaseAgent
     /// <summary>
     /// Generate a document draft incorporating feedback and ensuring consistency.
     /// </summary>
-    public void GenerateDocuments()
+    public void GenerateDocuments(string outputDir)
     {
-        // Implementation would compile sections, check terminology and maintain version control.
+        Directory.CreateDirectory(outputDir);
+        string file = Path.Combine(outputDir, $"document_{DateTime.UtcNow:yyyyMMddHHmmss}.txt");
+        File.WriteAllText(file, "Generated document placeholder.");
     }
 }
