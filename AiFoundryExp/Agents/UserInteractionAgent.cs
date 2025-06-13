@@ -1,3 +1,6 @@
+using System.Text.Json;
+using AiFoundryExp;
+
 namespace AiFoundryExp.Agents;
 
 /// <summary>
@@ -18,10 +21,14 @@ public class UserInteractionAgent : BaseAgent
 
     /// <summary>
     /// Interpret a user response and convert it into structured data for other agents.
-    /// Currently this simply echoes the response.
+    /// The parsed tokens are published to the orchestration agent via the message bus.
     /// </summary>
     public void ProcessResponse(string response)
     {
         Console.WriteLine($"Received: {response}");
+
+        Dictionary<string, string> tokens = InputParser.ParseText(response);
+        string json = JsonSerializer.Serialize(tokens);
+        Send("Orchestration Agent", json);
     }
 }
