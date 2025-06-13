@@ -6,14 +6,26 @@ namespace AiFoundryExp;
 
 public class AgentFactory
 {
-    private readonly PersistentAgentsClient _client;
-    private readonly string _modelDeployment;
+    private readonly TokenCredential _credential;
+    private readonly string _defaultEndpoint;
+    private readonly string _defaultModelDeployment;
+    private readonly Dictionary<string, PersistentAgentsClient> _clients = new();
 
-    public AgentFactory(string endpoint, string modelDeploymentName, TokenCredential? credential = null)
+    public AgentFactory(string defaultEndpoint, string defaultModelDeploymentName, TokenCredential? credential = null)
     {
-        credential ??= new DefaultAzureCredential();
-        _client = new PersistentAgentsClient(endpoint, credential);
-        _modelDeployment = modelDeploymentName;
+        _credential = credential ?? new DefaultAzureCredential();
+        _defaultEndpoint = defaultEndpoint;
+        _defaultModelDeployment = defaultModelDeploymentName;
+    }
+
+    private PersistentAgentsClient GetClient(string endpoint)
+    {
+        if (!_clients.TryGetValue(endpoint, out PersistentAgentsClient? client))
+        {
+            client = new PersistentAgentsClient(endpoint, _credential);
+            _clients[endpoint] = client;
+        }
+        return client;
     }
 
     public async Task<PersistentAgent> CreateAgentAsync(
@@ -22,11 +34,16 @@ public class AgentFactory
         IEnumerable<ToolDefinition>? tools = null,
         ToolResources? resources = null,
         float? temperature = null,
-        float? topP = null)
+        float? topP = null,
+        string? endpoint = null,
+        string? deploymentName = null)
     {
         tools ??= [];
+        string ep = endpoint ?? _defaultEndpoint;
+        string deployment = deploymentName ?? _defaultModelDeployment;
+        PersistentAgentsClient client = GetClient(ep);
 
-        await foreach (PersistentAgent existing in _client.Administration.GetAgentsAsync())
+        await foreach (PersistentAgent existing in client.Administration.GetAgentsAsync())
         {
             if (string.Equals(existing.Name, name, StringComparison.OrdinalIgnoreCase))
             {
@@ -34,8 +51,8 @@ public class AgentFactory
             }
         }
 
-        return await _client.Administration.CreateAgentAsync(
-            model: _modelDeployment,
+        return await client.Administration.CreateAgentAsync(
+            model: deployment,
             name: name,
             instructions: instructions,
             tools: tools,
@@ -51,12 +68,17 @@ public class AgentFactory
         IEnumerable<ToolDefinition>? tools = null,
         ToolResources? resources = null,
         float? temperature = null,
-        float? topP = null)
+        float? topP = null,
+        string? endpoint = null,
+        string? deploymentName = null)
     {
         tools ??= [];
-        return await _client.Administration.UpdateAgentAsync(
+        string ep = endpoint ?? _defaultEndpoint;
+        string deployment = deploymentName ?? _defaultModelDeployment;
+        PersistentAgentsClient client = GetClient(ep);
+        return await client.Administration.UpdateAgentAsync(
             assistantId: agentId,
-            model: _modelDeployment,
+            model: deployment,
             name: name,
             description: null,
             instructions: instructions,
@@ -70,7 +92,11 @@ public class AgentFactory
 
     public async Task<PersistentAgent> EnsureAgentAsync(AgentDefinition definition)
     {
-        await foreach (PersistentAgent existing in _client.Administration.GetAgentsAsync())
+        string ep = string.IsNullOrWhiteSpace(definition.Endpoint) ? _defaultEndpoint : definition.Endpoint!;
+        string deployment = string.IsNullOrWhiteSpace(definition.DeploymentName) ? _defaultModelDeployment : definition.DeploymentName!;
+        PersistentAgentsClient client = GetClient(ep);
+
+        await foreach (PersistentAgent existing in client.Administration.GetAgentsAsync())
         {
             if (string.Equals(existing.Name, definition.Name, StringComparison.OrdinalIgnoreCase))
             {
@@ -79,7 +105,9 @@ public class AgentFactory
                     name: definition.Name,
                     instructions: definition.Instructions,
                     temperature: definition.Temperature,
-                    topP: definition.TopP);
+                    topP: definition.TopP,
+                    endpoint: ep,
+                    deploymentName: deployment);
             }
         }
 
@@ -87,6 +115,8 @@ public class AgentFactory
             name: definition.Name,
             instructions: definition.Instructions,
             temperature: definition.Temperature,
-            topP: definition.TopP);
+            topP: definition.TopP,
+            endpoint: ep,
+            deploymentName: deployment);
     }
 }
