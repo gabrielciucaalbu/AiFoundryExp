@@ -45,7 +45,6 @@ public class DocumentGenerationAgent : BaseAgent
             }
         }
 
-        Directory.CreateDirectory(outputDir);
         File.WriteAllText(Path.Combine(outputDir, "BusinessPlan.txt"), businessPlan.ToString());
         File.WriteAllText(Path.Combine(outputDir, "SRS.txt"), srs.ToString());
         File.WriteAllText(Path.Combine(outputDir, "FunctionalSpec.txt"), functionalSpec.ToString());
