@@ -1,3 +1,5 @@
+using AiFoundryExp;
+
 namespace AiFoundryExp.Agents;
 
 /// <summary>
@@ -6,6 +8,8 @@ namespace AiFoundryExp.Agents;
 public class BusinessStrategyAgent : BaseAgent
 {
     public BusinessStrategyAgent(AgentDefinition definition, IMessageBus bus) : base(definition, bus) { }
+
+    private bool _inputLoaded;
 
     private readonly string[] _fields = ["business_idea", "target_market", "revenue_model"]; 
 
@@ -47,6 +51,20 @@ public class BusinessStrategyAgent : BaseAgent
 
     public override string? GenerateNextQuestion(Dictionary<string, string> context)
     {
+        if (!_inputLoaded)
+        {
+            string path = Path.Combine(AppContext.BaseDirectory, "input", "input.txt");
+            Dictionary<string, string> fileContext = InputParser.ParseFile(path);
+            foreach (var kv in fileContext)
+            {
+                if (!context.ContainsKey(kv.Key))
+                {
+                    context[kv.Key] = kv.Value;
+                }
+            }
+            _inputLoaded = true;
+        }
+
         return base.GenerateNextQuestion(context);
     }
 

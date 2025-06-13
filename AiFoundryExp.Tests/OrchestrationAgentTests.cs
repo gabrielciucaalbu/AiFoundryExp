@@ -23,6 +23,9 @@ public class OrchestrationAgentTests
 
         public void RegisterRemoteAgent(string name, PersistentAgentsClient client, PersistentAgent agent)
             => _inner.RegisterRemoteAgent(name, client, agent);
+
+        public string Prompt(string recipient, string prompt)
+            => _inner.Prompt(recipient, prompt);
     }
 
     private static OrchestrationAgent CreateAgent() =>
