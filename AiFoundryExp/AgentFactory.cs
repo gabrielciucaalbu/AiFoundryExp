@@ -46,4 +46,28 @@ public class AgentFactory
             temperature: temperature,
             topP: topP);
     }
+
+    public async Task<PersistentAgent> UpdateAgentAsync(
+        string agentId,
+        string? name = null,
+        string? instructions = null,
+        IEnumerable<ToolDefinition>? tools = null,
+        ToolResources? resources = null,
+        float? temperature = null,
+        float? topP = null)
+    {
+        tools ??= new List<ToolDefinition>();
+        return await _client.Administration.UpdateAgentAsync(
+            assistantId: agentId,
+            model: _modelDeployment,
+            name: name,
+            description: null,
+            instructions: instructions,
+            tools: tools,
+            toolResources: resources,
+            temperature: temperature,
+            topP: topP,
+            responseFormat: null,
+            metadata: null);
+    }
 }
