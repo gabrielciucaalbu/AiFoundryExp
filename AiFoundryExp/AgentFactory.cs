@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Azure.AI.Agents.Persistent;
@@ -27,6 +28,15 @@ public class AgentFactory
         float? topP = null)
     {
         tools ??= new List<ToolDefinition>();
+
+        await foreach (PersistentAgent existing in _client.Administration.GetAgentsAsync())
+        {
+            if (string.Equals(existing.Name, name, StringComparison.OrdinalIgnoreCase))
+            {
+                return existing;
+            }
+        }
+
         return await _client.Administration.CreateAgentAsync(
             model: _modelDeployment,
             name: name,
