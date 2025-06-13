@@ -59,3 +59,33 @@ Agents share information through structured data objects that maintain context a
 ### Conflict Resolution
 
 When agents produce conflicting recommendations, the Orchestration Agent facilitates resolution by identifying the source of conflict, engaging relevant agents to provide justification for their positions, and presenting trade-offs to the user through the User Interaction Agent. The system maintains a decision log to ensure consistency in future similar situations.
+
+## Environment Variables
+
+The application relies on a few environment variables to connect to your Azure resources and to determine the UID that the container should run as:
+
+| Variable | Description |
+|----------|-------------|
+| `PROJECT_ENDPOINT` | Endpoint for your Azure AI Services project. |
+| `MODEL_DEPLOYMENT_NAME` | Name of the model deployment to use. |
+| `APP_UID` | UID that the container will run as. Typically set to your local user ID. |
+
+## Running with Docker
+
+Build the container image from the repository root:
+
+```bash
+docker build -t aifoundryexp -f AiFoundryExp/Dockerfile .
+```
+
+Run the container while providing the required environment variables. Mount the `input` and `output` folders if you want to persist data on the host:
+
+```bash
+docker run \
+  -e PROJECT_ENDPOINT=<your-project-endpoint> \
+  -e MODEL_DEPLOYMENT_NAME=<your-model-deployment> \
+  -e APP_UID=$(id -u) \
+  -v $(pwd)/input:/app/input \
+  -v $(pwd)/output:/app/output \
+  aifoundryexp
+```
