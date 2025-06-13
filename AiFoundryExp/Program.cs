@@ -22,6 +22,7 @@ class Program
 
         IReadOnlyList<BaseAgent> agents = AgentRegistry.LoadAgents(configPath, engine.Bus);
         UserInteractionAgent uiAgent = agents.OfType<UserInteractionAgent>().First();
+        DocumentGenerationAgent docAgent = agents.OfType<DocumentGenerationAgent>().First();
 
         string inputFile = Path.Combine("input", "input.text");
         Queue<string> pendingResponses = new();
@@ -71,6 +72,13 @@ class Program
                 log.WriteLine($"{agent.Name}: {question}");
                 log.WriteLine($"User: {response}");
                 log.WriteLine();
+
+                if (agent.Name == "Document Generation Agent" &&
+                    response.Trim().Equals("yes", StringComparison.OrdinalIgnoreCase))
+                {
+                    log.WriteLine("Generating documents...");
+                    docAgent.GenerateDocuments(Path.Combine(outputDir, "conversation.log"), outputDir);
+                }
             }
         }
         while (engine.MoveNextPhase());
