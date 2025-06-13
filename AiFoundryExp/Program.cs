@@ -8,18 +8,18 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        string endpoint = Environment.GetEnvironmentVariable("PROJECT_ENDPOINT") ??
-            "https://agentic-experim-resource.services.ai.azure.com/api/projects/agentic-experim";
-        string deployment = Environment.GetEnvironmentVariable("MODEL_DEPLOYMENT_NAME") ??
-            "your-model-deployment";
+        string endpoint = Environment.GetEnvironmentVariable("PROJECT_ENDPOINT") ?? "https://agentic-experim-resource.services.ai.azure.com/api/projects/agentic-experim";
+        string deployment = Environment.GetEnvironmentVariable("MODEL_DEPLOYMENT_NAME") ?? "gpt-4.1";
 
         string configPath = args.Length > 0 ? args[0] : Path.Combine("Configuration", "agents.json");
 
         AgentsConfiguration config = await LoadConfiguration(configPath);
 
         string outputDir = InitializeOutputDirectory();
+
         string statePath = Path.Combine(outputDir, "state.json");
         string messageLog = Path.Combine(outputDir, "messages.log");
+
         OrchestrationEngine engine = await OrchestrationEngine.LoadAsync(configPath, statePath, messageLog);
 
         Dictionary<string, BaseAgent> agentMap = InitializeAgents(configPath, engine);
@@ -35,7 +35,7 @@ class Program
         AgentFactory factory = new AgentFactory(endpoint, deployment);
         await RegisterPersistentAgents(config, factory, engine, endpoint);
 
-        await RunWorkflow(engine, agentMap, uiAgent, docAgent, context, outputDir, log);
+        RunWorkflow(engine, agentMap, uiAgent, docAgent, context, outputDir, log);
 
         engine.SaveDecisionLog(Path.Combine(outputDir, "decision_log.json"));
     }
@@ -70,7 +70,7 @@ class Program
         }
     }
 
-    private static async Task RunWorkflow(
+    private static void RunWorkflow(
         OrchestrationEngine engine,
         Dictionary<string, BaseAgent> agentMap,
         UserInteractionAgent uiAgent,
@@ -123,6 +123,4 @@ class Program
         }
         while (engine.MoveNextPhase());
     }
-
-    // Questions are now generated dynamically by each agent and not defined here.
 }
