@@ -6,22 +6,25 @@ public class OrchestrationEngine
 {
     private readonly Dictionary<string, AgentDefinition> _agents;
     public IMessageBus Bus { get; }
+    private readonly string _statePath;
 
     public DecisionLog DecisionLog { get; } = new();
 
     public WorkflowPhase CurrentPhase { get; private set; } = WorkflowPhase.BusinessConceptDevelopment;
 
-    private OrchestrationEngine(IEnumerable<AgentDefinition> agents)
+    private OrchestrationEngine(IEnumerable<AgentDefinition> agents, string statePath, string? messageLog)
     {
         _agents = agents.ToDictionary(a => a.Name, StringComparer.OrdinalIgnoreCase);
-        Bus = new MessageBus();
+        Bus = new MessageBus(messageLog);
+        _statePath = statePath;
+        LoadState();
     }
 
-    public static async Task<OrchestrationEngine> LoadAsync(string configPath)
+    public static async Task<OrchestrationEngine> LoadAsync(string configPath, string statePath, string? messageLog = null)
     {
         using FileStream stream = File.OpenRead(configPath);
         AgentsConfiguration config = await JsonSerializer.DeserializeAsync<AgentsConfiguration>(stream) ?? new AgentsConfiguration();
-        return new OrchestrationEngine(config.Agents);
+        return new OrchestrationEngine(config.Agents, statePath, messageLog);
     }
 
     public IEnumerable<AgentDefinition> GetActiveAgents()
@@ -56,8 +59,20 @@ public class OrchestrationEngine
         }
 
         CurrentPhase = (WorkflowPhase)((int)CurrentPhase + 1);
+        SaveState();
         return true;
     }
 
     public void SaveDecisionLog(string path) => DecisionLog.Save(path);
+
+    private void LoadState()
+    {
+        EngineState state = FileStorage.LoadState(_statePath);
+        CurrentPhase = state.CurrentPhase;
+    }
+
+    private void SaveState()
+    {
+        FileStorage.SaveState(_statePath, new EngineState { CurrentPhase = CurrentPhase });
+    }
 }

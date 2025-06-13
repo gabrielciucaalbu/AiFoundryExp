@@ -11,15 +11,22 @@ class Program
         string endpoint = Environment.GetEnvironmentVariable("PROJECT_ENDPOINT") ?? "https://your-aiservices-id.services.ai.azure.com/api/projects/your-project";
         string deployment = Environment.GetEnvironmentVariable("MODEL_DEPLOYMENT_NAME") ?? "your-model-deployment";
 
-        string configPath = args.Length > 0 ? args[0] : "agents.json";
+        string configPath = args.Length > 0 ? args[0] : Path.Combine("Configuration", "agents.json");
         AgentsConfiguration config;
         using (FileStream stream = File.OpenRead(configPath))
         {
             config = await JsonSerializer.DeserializeAsync<AgentsConfiguration>(stream) ?? new AgentsConfiguration();
         }
 
-        IReadOnlyList<BaseAgent> agents = AgentRegistry.LoadAgents(configPath);
+        string outputDir = "output";
+        Directory.CreateDirectory(outputDir);
+        string statePath = Path.Combine(outputDir, "state.json");
+        string messageLog = Path.Combine(outputDir, "messages.log");
+        OrchestrationEngine engine = await OrchestrationEngine.LoadAsync(configPath, statePath, messageLog);
+
+        IReadOnlyList<BaseAgent> agents = AgentRegistry.LoadAgents(configPath, engine.Bus);
         UserInteractionAgent uiAgent = agents.OfType<UserInteractionAgent>().First();
+        DocumentGenerationAgent docAgent = agents.OfType<DocumentGenerationAgent>().First();
 
         string inputFile = Path.Combine("input", "input.text");
         Queue<string> pendingResponses = new();
@@ -28,9 +35,7 @@ class Program
             pendingResponses.Enqueue(File.ReadAllText(inputFile).Trim());
         }
 
-        string outputDir = "output";
-        Directory.CreateDirectory(outputDir);
-        using StreamWriter log = new(Path.Combine(outputDir, "conversation.log"));
+        using StreamWriter log = new(Path.Combine(outputDir, "conversation.log"), append: true);
 
         AgentFactory factory = new AgentFactory(endpoint, deployment);
 
@@ -39,8 +44,6 @@ class Program
             PersistentAgent agent = await factory.EnsureAgentAsync(definition);
             Console.WriteLine($"Ensured agent '{agent.Name}' with ID {agent.Id}");
         }
-
-        OrchestrationEngine engine = await OrchestrationEngine.LoadAsync(configPath);
 
         do
         {
@@ -68,12 +71,23 @@ class Program
                 }
 
                 uiAgent.ProcessResponse(response);
+
+                if (agent.Name == "Document Generation Agent" &&
+                    response.Trim().Equals("yes", StringComparison.OrdinalIgnoreCase))
+                {
+                    log.WriteLine("Generating documents...");
+                    docAgent.GenerateDocuments(Path.Combine(outputDir, "conversation.log"), outputDir);
+                    log.WriteLine("Document generated.");
+                }
+
                 log.WriteLine($"{agent.Name}: {question}");
                 log.WriteLine($"User: {response}");
                 log.WriteLine();
             }
         }
         while (engine.MoveNextPhase());
+
+        engine.SaveDecisionLog(Path.Combine(outputDir, "decision_log.json"));
     }
 
     static string GetQuestion(WorkflowPhase phase, string agentName)
