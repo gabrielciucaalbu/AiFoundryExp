@@ -1,5 +1,6 @@
 using Azure.AI.Agents.Persistent;
 using System.Text.Json;
+using System;
 using AiFoundryExp.Agents;
 
 namespace AiFoundryExp;
@@ -35,7 +36,7 @@ class Program
         AgentFactory factory = new AgentFactory(endpoint, deployment);
         await RegisterPersistentAgents(config, factory, engine, endpoint);
 
-        RunWorkflow(engine, agentMap, uiAgent, docAgent, context, outputDir, log);
+        RunWorkflow(engine, agentMap, uiAgent, docAgent, context, outputDir, log, messageLog);
 
         engine.SaveDecisionLog(Path.Combine(outputDir, "decision_log.json"));
     }
@@ -77,7 +78,8 @@ class Program
         DocumentGenerationAgent docAgent,
         Dictionary<string, string> context,
         string outputDir,
-        StreamWriter log)
+        StreamWriter log,
+        string messageLog)
     {
         do
         {
@@ -103,6 +105,8 @@ class Program
                     }
 
                     string response = uiAgent.AskQuestion(question);
+                    File.AppendAllText(messageLog,
+                        $"{DateTime.UtcNow:o} {agentDef.Name}->User: {question}" + Environment.NewLine);
 
                     uiAgent.ProcessResponse(response);
                     agent.ProcessAnswer(response, context);
