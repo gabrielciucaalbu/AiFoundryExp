@@ -1,17 +1,6 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 
 namespace AiFoundryExp;
-
-public record AgentMessage(string Sender, string Recipient, string Content);
-
-public interface IMessageBus
-{
-    void Publish(AgentMessage message);
-    void Subscribe(string recipient, Action<AgentMessage> handler);
-    void Unsubscribe(string recipient, Action<AgentMessage> handler);
-}
 
 public class MessageBus : IMessageBus
 {

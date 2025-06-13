@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text.Json;
 
 namespace AiFoundryExp;
@@ -39,18 +36,4 @@ public class DecisionLog
         string json = JsonSerializer.Serialize(_entries, new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(path, json);
     }
-}
-
-/// <summary>
-/// Details about a single decision.
-/// </summary>
-public class DecisionLogEntry
-{
-    public DateTime Timestamp { get; init; }
-
-    public string Context { get; init; } = string.Empty;
-
-    public string Decision { get; init; } = string.Empty;
-
-    public string Rationale { get; init; } = string.Empty;
 }

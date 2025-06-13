@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Azure.AI.Agents.Persistent;
 using Azure.Core;
 using Azure.Identity;

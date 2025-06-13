@@ -1,7 +1,6 @@
 using Azure.AI.Agents.Persistent;
 using System.Text.Json;
 using AiFoundryExp.Agents;
-using System.Linq;
 
 namespace AiFoundryExp;
 
