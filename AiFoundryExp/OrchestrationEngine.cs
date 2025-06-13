@@ -20,6 +20,8 @@ public class OrchestrationEngine
     private readonly Dictionary<string, AgentDefinition> _agents;
     public IMessageBus Bus { get; }
 
+    public DecisionLog DecisionLog { get; } = new();
+
     public WorkflowPhase CurrentPhase { get; private set; } = WorkflowPhase.BusinessConceptDevelopment;
 
     private OrchestrationEngine(IEnumerable<AgentDefinition> agents)
@@ -69,4 +71,6 @@ public class OrchestrationEngine
         CurrentPhase = (WorkflowPhase)((int)CurrentPhase + 1);
         return true;
     }
+
+    public void SaveDecisionLog(string path) => DecisionLog.Save(path);
 }
