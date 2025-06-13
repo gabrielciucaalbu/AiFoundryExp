@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "AiFoundryExp": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}
