@@ -24,19 +24,17 @@ class Program
         OrchestrationEngine engine = await OrchestrationEngine.LoadAsync(configPath, statePath, messageLog);
 
         Dictionary<string, BaseAgent> agentMap = InitializeAgents(configPath, engine);
-        UserInteractionAgent uiAgent = (UserInteractionAgent)agentMap["User Interaction Agent"];
+        BusinessStrategyAgent strategy = (BusinessStrategyAgent)agentMap["Business Strategy Agent"];
         DocumentGenerationAgent docAgent = (DocumentGenerationAgent)agentMap["Document Generation Agent"];
-
+        
         string inputFile = Path.Combine("input", "input.text");
         Dictionary<string, string> context = InputParser.ParseFile(inputFile);
 
-        using var logStream = new FileStream(Path.Combine(outputDir, "conversation.log"), FileMode.Append, FileAccess.Write, FileShare.Read);
-        using StreamWriter log = new(logStream);
 
         AgentFactory factory = new AgentFactory(endpoint, deployment);
         await RegisterPersistentAgents(config, factory, engine, endpoint);
 
-        RunWorkflow(engine, agentMap, uiAgent, docAgent, context, outputDir, log, messageLog);
+        RunWorkflow(agentMap, strategy, docAgent, context, outputDir);
 
         engine.SaveDecisionLog(Path.Combine(outputDir, "decision_log.json"));
     }
@@ -72,59 +70,17 @@ class Program
     }
 
     private static void RunWorkflow(
-        OrchestrationEngine engine,
         Dictionary<string, BaseAgent> agentMap,
-        UserInteractionAgent uiAgent,
+        BusinessStrategyAgent strategy,
         DocumentGenerationAgent docAgent,
         Dictionary<string, string> context,
-        string outputDir,
-        StreamWriter log,
-        string messageLog)
+        string outputDir)
     {
-        do
-        {
-            Console.WriteLine($"\n--- {engine.CurrentPhase} ---");
-            log.WriteLine($"--- {engine.CurrentPhase} ---");
+        OrchestrationAgent orch = (OrchestrationAgent)agentMap["Orchestration Agent"];
+        orch.ActivateNextAgents(agentMap.Values);
+        orch.MaintainContext();
 
-            foreach (AgentDefinition agentDef in engine.GetActiveAgents())
-            {
-                if (agentDef.Name == "User Interaction Agent")
-                {
-                    continue;
-                }
-
-                BaseAgent agent = agentMap[agentDef.Name];
-
-                while (true)
-                {
-                    string? question = agent.GenerateNextQuestion(context);
-                    if (string.IsNullOrEmpty(question))
-                    {
-                        Console.WriteLine($"Activating agent '{agentDef.Name}' with no questions.");
-                        break;
-                    }
-
-                    string response = uiAgent.AskQuestion(question);
-                    File.AppendAllText(messageLog,
-                        $"{DateTime.UtcNow:o} {agentDef.Name}->User: {question}" + Environment.NewLine);
-
-                    uiAgent.ProcessResponse(response);
-                    agent.ProcessAnswer(response, context);
-
-                    if (agent is DocumentGenerationAgent &&
-                        response.Trim().Equals("yes", StringComparison.OrdinalIgnoreCase))
-                    {
-                        log.WriteLine("Generating documents...");
-                        docAgent.GenerateDocuments(Path.Combine(outputDir, "conversation.log"), outputDir);
-                        log.WriteLine("Document generated.");
-                    }
-
-                    log.WriteLine($"{agentDef.Name}: {question}");
-                    log.WriteLine($"User: {response}");
-                    log.WriteLine();
-                }
-            }
-        }
-        while (engine.MoveNextPhase());
+        BusinessModel model = strategy.BuildBusinessModel(context);
+        docAgent.GenerateDocuments(model, outputDir);
     }
 }

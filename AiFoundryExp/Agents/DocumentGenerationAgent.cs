@@ -3,77 +3,30 @@ using System.Text;
 namespace AiFoundryExp.Agents;
 
 /// <summary>
-/// Compiles professional documents from the outputs of all other agents.
+/// Generates simple business plan documents from the provided model.
 /// </summary>
 public class DocumentGenerationAgent : BaseAgent
 {
     public DocumentGenerationAgent(AgentDefinition definition, IMessageBus bus) : base(definition, bus) { }
 
-    private bool _confirmed;
-
     /// <summary>
-    /// Generate a document draft incorporating feedback and ensuring consistency.
+    /// Create a basic business plan file based on the provided model.
     /// </summary>
-    public void GenerateDocuments(string logPath, string outputDir)
+    public void GenerateDocuments(BusinessModel model, string outputDir)
     {
+        ArgumentNullException.ThrowIfNull(model);
+
         Directory.CreateDirectory(outputDir);
+        StringBuilder plan = new();
+        plan.AppendLine($"Idea: {model.BusinessIdea}");
+        plan.AppendLine($"Target Market: {model.TargetMarket}");
+        plan.AppendLine($"Revenue Model: {model.RevenueModel}");
 
-        if (!File.Exists(logPath))
-        {
-            Console.WriteLine($"Conversation log not found: {logPath}");
-            return;
-        }
-
-        StringBuilder businessPlan = new();
-        StringBuilder srs = new();
-        StringBuilder functionalSpec = new();
-
-        using (var stream = new FileStream(logPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-        {
-            stream.Position = 0; // Ensure we read from the start
-            using var reader = new StreamReader(stream);
-            string? line;
-
-            while ((line = reader.ReadLine()) != null)
-            {
-                if (line.StartsWith("Business Strategy Agent:"))
-                {
-                    businessPlan.AppendLine(line.Substring("Business Strategy Agent:".Length).Trim());
-                }
-                else if (line.StartsWith("Requirements Gathering Agent:") ||
-                         line.StartsWith("Technical Specification Agent:"))
-                {
-                    srs.AppendLine(line.Substring(line.IndexOf(':') + 1).Trim());
-                }
-                else if (line.StartsWith("Functional Design Agent:"))
-                {
-                    functionalSpec.AppendLine(line.Substring("Functional Design Agent:".Length).Trim());
-                }
-            }
-        }
-
-        File.WriteAllText(Path.Combine(outputDir, "BusinessPlan.txt"), businessPlan.ToString());
-        File.WriteAllText(Path.Combine(outputDir, "SRS.txt"), srs.ToString());
-        File.WriteAllText(Path.Combine(outputDir, "FunctionalSpec.txt"), functionalSpec.ToString());
-
+        File.WriteAllText(Path.Combine(outputDir, "BusinessPlan.txt"), plan.ToString());
         Console.WriteLine($"Documents generated in '{outputDir}'.");
     }
 
-    public override string? GenerateNextQuestion(Dictionary<string, string> context)
-    {
-        if (_confirmed)
-        {
-            return null;
-        }
+    public override string? GenerateNextQuestion(Dictionary<string, string> context) => null;
 
-        return base.GenerateNextQuestion(context);
-    }
-
-    public override void ProcessAnswer(string answer, Dictionary<string, string> context)
-    {
-        if (answer.Trim().Equals("yes", StringComparison.OrdinalIgnoreCase))
-        {
-            _confirmed = true;
-        }
-    }
+    public override void ProcessAnswer(string answer, Dictionary<string, string> context) { }
 }

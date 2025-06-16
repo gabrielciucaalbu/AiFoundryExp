@@ -5,5 +5,5 @@ namespace AiFoundryExp;
 public class EngineState
 {
     [JsonPropertyName("currentPhase")]
-    public WorkflowPhase CurrentPhase { get; set; } = WorkflowPhase.BusinessConceptDevelopment;
+    public WorkflowPhase CurrentPhase { get; set; } = WorkflowPhase.BusinessConcept;
 }
