@@ -10,8 +10,12 @@ public class OrchestrationAgent : BaseAgent
     private HashSet<string> _knownAgents = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
-    /// Engine controlling workflow progression. When set, the current phase will
-    /// be used to choose which agents are activated.
+    /// Optional list of tasks to distribute to other agents.
+    /// </summary>
+    public List<string> Tasks { get; } = new();
+
+    /// <summary>
+    /// Engine used to look up other agents and route messages between them.
     /// </summary>
     public OrchestrationEngine? Engine { get; set; }
 
@@ -26,7 +30,7 @@ public class OrchestrationAgent : BaseAgent
     }
 
     /// <summary>
-    /// Determine which specialized agents should run based on the current phase and user inputs.
+    /// Determine which specialized agents should run based on the configured engine.
     /// </summary>
     public void ActivateNextAgents(IEnumerable<BaseAgent> agents)
     {
@@ -50,6 +54,26 @@ public class OrchestrationAgent : BaseAgent
             if (active.Contains(agent.Name))
             {
                 Send(agent.Name, "activate");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Send the configured task list to all known agents.
+    /// </summary>
+    public void SendTasks()
+    {
+        if (Tasks.Count == 0 || _knownAgents.Count == 0)
+            return;
+
+        foreach (string agentName in _knownAgents)
+        {
+            if (agentName.Equals(Name, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            foreach (string task in Tasks)
+            {
+                Send(agentName, task);
             }
         }
     }

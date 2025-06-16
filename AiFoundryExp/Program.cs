@@ -18,10 +18,9 @@ class Program
 
         string outputDir = InitializeOutputDirectory();
 
-        string statePath = Path.Combine(outputDir, "state.json");
         string messageLog = Path.Combine(outputDir, "agents_comm.log");
 
-        OrchestrationEngine engine = await OrchestrationEngine.LoadAsync(configPath, statePath, messageLog);
+        OrchestrationEngine engine = await OrchestrationEngine.LoadAsync(configPath, messageLog);
 
         Dictionary<string, BaseAgent> agentMap = InitializeAgents(configPath, engine);
         BusinessStrategyAgent strategy = (BusinessStrategyAgent)agentMap["Business Strategy Agent"];
@@ -77,7 +76,15 @@ class Program
         string outputDir)
     {
         OrchestrationAgent orch = (OrchestrationAgent)agentMap["Orchestration Agent"];
+        orch.Tasks.AddRange(new[]
+        {
+            "Gather user input",
+            "Build business model",
+            "Generate documents"
+        });
+
         orch.ActivateNextAgents(agentMap.Values);
+        orch.SendTasks();
         orch.MaintainContext();
 
         BusinessModel model = strategy.BuildBusinessModel(context);

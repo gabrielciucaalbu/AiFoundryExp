@@ -38,20 +38,6 @@ The agents communicate through a sophisticated message-passing system coordinate
 
 The repository includes a lightweight **MessageBus** implementation that allows agents to publish and subscribe to `AgentMessage` objects. Every agent registers with the bus on creation and can send structured messages to other agents without direct references, enabling loose coupling and simple extension of the protocol.
 
-### Workflow Phases
-
-The system operates through distinct phases, each involving specific agents working together to achieve phase objectives.
-
-**Phase 1: Business Concept Development** begins when the Orchestration Agent activates the Business Strategy Agent and User Interaction Agent. The Business Strategy Agent formulates strategic questions about the business concept, market opportunity, and competitive landscape. The User Interaction Agent presents these questions in an approachable manner and interprets user responses. As users provide information, the Business Strategy Agent builds a comprehensive business model, identifying gaps and requesting clarification through the User Interaction Agent. The Orchestration Agent monitors progress and determines when sufficient business context exists to proceed.
-
-**Phase 2: Requirements Discovery** involves the Requirements Gathering Agent taking the lead while maintaining close coordination with the Business Strategy Agent. The Requirements Gathering Agent analyzes the business model to identify implied technical needs and generates targeted questions about system capabilities, user workflows, and constraints. The User Interaction Agent continues to facilitate communication, ensuring technical concepts are presented appropriately. The Business Strategy Agent remains active to clarify business objectives when technical requirements seem misaligned with business goals.
-
-**Phase 3: Technical Specification** sees the Technical Specification Agent become primary, working with inputs from both the Business Strategy and Requirements Gathering Agents. This agent transforms business and functional requirements into detailed technical specifications, consulting with the Requirements Gathering Agent to ensure completeness and accuracy. The User Interaction Agent presents technical decisions and trade-offs to users for validation. The Orchestration Agent ensures all technical decisions align with business constraints and objectives.
-
-**Phase 4: Functional Design** activates the Functional Design Agent to create detailed specifications for system behavior and user interaction. This agent collaborates closely with the Technical Specification Agent to ensure functional designs are technically feasible. The User Interaction Agent presents mockups, workflows, and functional descriptions for user feedback. The Requirements Gathering Agent validates that all requirements are addressed in the functional specifications.
-
-**Phase 5: Document Generation and Refinement** brings the Document Generation Agent to the forefront, compiling inputs from all other agents into cohesive, professional documents. This agent works iteratively, generating drafts that the User Interaction Agent presents for feedback. Based on user input, the Orchestration Agent may reactivate specific specialized agents to refine particular sections. The process continues until users approve all documents.
-
 ### Inter-Agent Data Flow
 
 Agents share information through structured data objects that maintain context and traceability. Business objectives flow from the Business Strategy Agent through the Requirements Gathering Agent to the Technical Specification Agent, maintaining clear lineage. Technical constraints identified by the Technical Specification Agent flow back to influence business strategy refinements. User feedback collected by the User Interaction Agent is processed and routed to relevant specialized agents by the Orchestration Agent.
