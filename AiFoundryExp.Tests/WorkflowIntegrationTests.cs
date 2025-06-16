@@ -21,11 +21,8 @@ public class WorkflowIntegrationTests
 
         var expected = new[]
         {
-            WorkflowPhase.BusinessConceptDevelopment,
-            WorkflowPhase.RequirementsDiscovery,
-            WorkflowPhase.TechnicalSpecification,
-            WorkflowPhase.FunctionalDesign,
-            WorkflowPhase.DocumentGenerationAndRefinement
+            WorkflowPhase.BusinessConcept,
+            WorkflowPhase.DocumentGeneration
         };
 
         Assert.Equal(expected, phases);

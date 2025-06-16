@@ -5,21 +5,21 @@ namespace AiFoundryExp.Tests;
 public class DocumentGenerationAgentTests
 {
     [Fact]
-    public void GenerateDocuments_CanReadWhileLogIsOpenForWrite()
+    public void GenerateDocuments_WritesBusinessPlan()
     {
         string tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
         Directory.CreateDirectory(tempDir);
-        string logPath = Path.Combine(tempDir, "conversation.log");
-
-        using FileStream logStream = new(logPath, FileMode.Create, FileAccess.Write, FileShare.Read);
-        using StreamWriter log = new(logStream);
-        log.WriteLine("Business Strategy Agent: Test plan");
-        log.Flush();
 
         DocumentGenerationAgent agent = new(new AgentDefinition { Name = "DocGen" }, new MessageBus());
+        BusinessModel model = new() { BusinessIdea = "Idea", TargetMarket = "QA", RevenueModel = "subscriptions" };
 
-        Exception? ex = Record.Exception(() => agent.GenerateDocuments(logPath, tempDir));
+        agent.GenerateDocuments(model, tempDir);
 
-        Assert.Null(ex);
+        string file = Path.Combine(tempDir, "BusinessPlan.txt");
+        Assert.True(File.Exists(file));
+        string text = File.ReadAllText(file);
+        Assert.Contains("Idea", text);
+        Assert.Contains("QA", text);
+        Assert.Contains("subscriptions", text);
     }
 }

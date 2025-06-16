@@ -31,11 +31,8 @@ public class OrchestrationEngine
     {
         return CurrentPhase switch
         {
-            WorkflowPhase.BusinessConceptDevelopment => FilterAgents("Business Strategy Agent", "User Interaction Agent"),
-            WorkflowPhase.RequirementsDiscovery => FilterAgents("Requirements Gathering Agent", "Business Strategy Agent", "User Interaction Agent"),
-            WorkflowPhase.TechnicalSpecification => FilterAgents("Technical Specification Agent", "Requirements Gathering Agent", "Business Strategy Agent", "User Interaction Agent"),
-            WorkflowPhase.FunctionalDesign => FilterAgents("Functional Design Agent", "Technical Specification Agent", "User Interaction Agent", "Requirements Gathering Agent"),
-            WorkflowPhase.DocumentGenerationAndRefinement => FilterAgents("Document Generation Agent", "User Interaction Agent"),
+            WorkflowPhase.BusinessConcept => FilterAgents("Business Strategy Agent"),
+            WorkflowPhase.DocumentGeneration => FilterAgents("Document Generation Agent"),
             _ => Enumerable.Empty<AgentDefinition>()
         };
     }
@@ -53,12 +50,12 @@ public class OrchestrationEngine
 
     public bool MoveNextPhase()
     {
-        if (CurrentPhase == WorkflowPhase.DocumentGenerationAndRefinement)
+        if (CurrentPhase == WorkflowPhase.DocumentGeneration)
         {
             return false;
         }
 
-        CurrentPhase = (WorkflowPhase)((int)CurrentPhase + 1);
+        CurrentPhase = WorkflowPhase.DocumentGeneration;
         SaveState();
         return true;
     }

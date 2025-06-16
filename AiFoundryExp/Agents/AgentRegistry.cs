@@ -20,10 +20,6 @@ public static class AgentRegistry
             {
                 "Orchestration Agent" => new OrchestrationAgent(def, bus),
                 "Business Strategy Agent" => new BusinessStrategyAgent(def, bus),
-                "Requirements Gathering Agent" => new RequirementsGatheringAgent(def, bus),
-                "Technical Specification Agent" => new TechnicalSpecificationAgent(def, bus),
-                "Functional Design Agent" => new FunctionalDesignAgent(def, bus),
-                "User Interaction Agent" => new UserInteractionAgent(def, bus),
                 "Document Generation Agent" => new DocumentGenerationAgent(def, bus),
                 _ => null
             };

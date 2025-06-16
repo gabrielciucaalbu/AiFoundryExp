@@ -112,7 +112,6 @@ public class OrchestrationAgentTests
         orch.ActivateNextAgents(agents);
 
         bus.Publish(new AgentMessage("Business Strategy Agent", orch.Name, "target_market=SMEs"));
-        bus.Publish(new AgentMessage("Requirements Gathering Agent", orch.Name, "key_features=login"));
 
         int before = bus.Messages.Count;
         orch.MaintainContext();
@@ -123,7 +122,7 @@ public class OrchestrationAgentTests
         var sent = bus.Messages.Skip(before).ToList();
         foreach (BaseAgent agent in agents.Where(a => a.Name != orch.Name))
         {
-            Assert.Contains(sent, m => m.Recipient == agent.Name && m.Content.Contains("target_market=SMEs") && m.Content.Contains("key_features=login"));
+            Assert.Contains(sent, m => m.Recipient == agent.Name && m.Content.Contains("target_market=SMEs"));
         }
     }
 }
