@@ -34,11 +34,7 @@ public class OrchestrationAgentTests
     private static async Task<(OrchestrationAgent orch, List<BaseAgent> agents, TestBus bus, OrchestrationEngine engine)> CreateEngineAndAgentsAsync()
     {
         string configPath = Path.GetFullPath(Path.Combine("..", "..", "..", "..", "AiFoundryExp", "Configuration", "agents.json"));
-        string tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-        Directory.CreateDirectory(tempDir);
-        string statePath = Path.Combine(tempDir, "state.json");
-
-        OrchestrationEngine engine = await OrchestrationEngine.LoadAsync(configPath, statePath);
+        OrchestrationEngine engine = await OrchestrationEngine.LoadAsync(configPath);
         TestBus bus = new();
         List<BaseAgent> agents = AgentRegistry.LoadAgents(configPath, bus).ToList();
         OrchestrationAgent orch = (OrchestrationAgent)agents.First(a => a is OrchestrationAgent);
@@ -92,15 +88,10 @@ public class OrchestrationAgentTests
 
         orch.ActivateNextAgents(agents);
 
-        var expected = engine.GetActiveAgents().Select(a => a.Name);
+        var expected = agents.Where(a => a.Name != orch.Name).Select(a => a.Name);
         foreach (string name in expected)
         {
             Assert.Contains(bus.Messages, m => m.Recipient == name && m.Content == "activate");
-        }
-
-        foreach (string name in agents.Where(a => a.Name != orch.Name && !expected.Contains(a.Name)).Select(a => a.Name))
-        {
-            Assert.DoesNotContain(bus.Messages, m => m.Recipient == name && m.Content == "activate");
         }
     }
 
